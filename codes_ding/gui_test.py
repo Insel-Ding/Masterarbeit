@@ -16,7 +16,7 @@ import sys
 import math
 
 
-#Funktion Menu "Datei -- Mesh Datei visualisieren"
+#Funktion Menu |Datei -- Mesh Datei visualisieren|
 def open_mesh():
     tk.messagebox.showinfo(message="Wählen Sie eine Mesh Datei...")
     mesh_path = filedialog.askopenfilename(filetypes=[("stl Datei","*.stl")])
