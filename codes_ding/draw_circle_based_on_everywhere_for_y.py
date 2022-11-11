@@ -34,7 +34,6 @@ print(picked)
 
 xyz_load = np.asarray(example1.points)
 
-
 x0 = round(xyz_load[picked[0]][0],2)
 y0 = round(xyz_load[picked[0]][1],2)
 z0 = round(xyz_load[picked[0]][2],2)

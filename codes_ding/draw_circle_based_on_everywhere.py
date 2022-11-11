@@ -26,6 +26,7 @@ threshold_calib = 0.01
 ########################################################################
 #registed_both= 'registed_both_nr1'
 example = os.path.join(model_path,'registed_both.ply') 
+example = os.path.join(model_path,'registed_both_005_025.ply') 
 example1 = o3d.io.read_point_cloud(example)
 
 picked = uti.pick_points(example1)
