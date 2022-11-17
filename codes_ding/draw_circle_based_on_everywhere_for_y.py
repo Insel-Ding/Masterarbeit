@@ -74,8 +74,8 @@ nr = 'nr4'
 js = nr+'.json'
 ply = nr+'.ply'
 pc = os.path.join(model_path,ply)
-json_path = os.path.join(model_path,"cropped_1_new.json")
-json_path_out = os.path.join(model_path,"cropped_1_new_1.json")
+json_path = os.path.join(model_path,"muster_y.json")
+json_path_out = os.path.join(model_path,"circle_y.json")
 
 dict1={}
 lis= anew.tolist()
