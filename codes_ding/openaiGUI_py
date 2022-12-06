@@ -18,7 +18,7 @@ window.title("GUI")
 
 # Setze die Fenstergröße auf 1200 * 1000
 window.geometry("1200x1000")
-
+#window.configure(background="white")
 # Setze die Dateipfad an 
 model_path = None
 mesh_path =None
@@ -28,6 +28,8 @@ registed_target = None
 finetuned_source = None
 finetuned_target = None
 finetuned_registed__both = None
+
+
 # Definiere die Methode, die beim Klicken auf den Button ausgeführt wird
 def pfad_auswahl():
     global model_path
@@ -259,37 +261,51 @@ def segmentation_ring():
         save_path = filedialog.asksaveasfilename(filetypes=[("ply Datei","*.ply")],
                                                  defaultextension = ".ply")
         o3d.io.write_point_cloud(save_path, ring)
+        
+def compare(n=0):
+    n=int(input1.get())
+    if num_segmentations == True:
+        pcd=[]
+        for i in n:
+            pcd[n] = o3d.io.read_point_cloud(os.path.join(model_path,"cropped_%d.ply"%(i)))
+            o3d.visualization.draw_geometries([pcd[i]])
 
-label1 = tk.Label(window, text="Anzahl des Referenzpunkts:")
-label2 = tk.Label(window, text="/")
-label3 = tk.Label(window, text="/")
-label4 = tk.Label(window, text="/")
-label5 = tk.Label(window, text="/")
+# Erstelle die Labeln
+label1 = tk.Label(window, text="Anzahl des Referenzpunkts:",font=("Arial",12))
+label2 = tk.Label(window, text="/",font=("Arial",12))
+label3 = tk.Label(window, text="/",font=("Arial",12))
+label4 = tk.Label(window, text="Anzahl der Segmentiertefläche:",font=("Arial",12))
+
 # Erstelle die Eingabefelder
 input1 = tk.Entry(window)
+input2 = tk.Entry(window)
 
 # Erstelle die Schaltflächen
-button1 = tk.Button(window, text="1.pfad_auswahl", command=pfad_auswahl)
-button2 = tk.Button(window, text="2.stl_auswahl", command=stl_auswahl)
-button3 = tk.Button(window, text="3.ply_auswahl", command=ply_auswahl)
-button4 = tk.Button(window, text="4.ICP_mit_finetuning", command=ICP_mit_finetuning)
-button5 = tk.Button(window, text="ICP_steps", command=ICP_steps)
-button6 = tk.Button(window, text="5.segmentierung_kreis", command=segmentation_kreis)
-button7 = tk.Button(window, text="segmentierung_ring", command=segmentation_ring)
+button1 = tk.Button(window, text="1.pfad_auswahl", command=pfad_auswahl,font=("Arial",12))
+button2 = tk.Button(window, text="2.stl_auswahl", command=stl_auswahl,font=("Arial",12))
+button3 = tk.Button(window, text="3.ply_auswahl", command=ply_auswahl,font=("Arial",12))
+button4 = tk.Button(window, text="4.ICP_mit_finetuning", command=ICP_mit_finetuning,font=("Arial",12))
+button5 = tk.Button(window, text="ICP_steps", command=ICP_steps,font=("Arial",12))
+button6 = tk.Button(window, text="5.segmentierung_kreis", command=segmentation_kreis,font=("Arial",12))
+button7 = tk.Button(window, text="segmentierung_ring", command=segmentation_ring,font=("Arial",12))
+button8 = tk.Button(window, text="Vergleich der Segmentiertefläche", command=compare,font=("Arial",12))
+
+
 # Platziere die Schaltflächen und Eingabefelder und labeln im Fenster
 label1.place(relx=0.1, rely=0.25, anchor="c")
-label2.place(relx=0.26, rely=0.28, anchor="c")
-label3.place(relx=0.26, rely=0.33, anchor="c")
-label4.place(relx=0.38, rely=0.33, anchor="c")
+label2.place(relx=0.28, rely=0.28, anchor="c")
+label3.place(relx=0.28, rely=0.33, anchor="c")
+label4.place(relx=0.1, rely=0.37, anchor="c")
 
-input1.place(relx=0.2, rely=0.25, anchor="c",width=50)
+input1.place(relx=0.22, rely=0.25, anchor="c",width=50)
+input2.place(relx=0.22, rely=0.37, anchor="c",width=50)
 
 button1.place(relx=0.2, rely=0.1, anchor="c")
 button2.place(relx=0.2, rely=0.15, anchor="c")
 button3.place(relx=0.2, rely=0.2, anchor="c")
 button4.place(relx=0.2, rely=0.28, anchor="c")
-button5.place(relx=0.3, rely=0.28, anchor="c")
+button5.place(relx=0.33, rely=0.28, anchor="c")
 button6.place(relx=0.2, rely=0.33, anchor="c")
-button7.place(relx=0.32, rely=0.33, anchor="c")
-# Betrete die Meldungsschleife
+button7.place(relx=0.36, rely=0.33, anchor="c")
+# Betreten die Meldungsschleife
 window.mainloop()
