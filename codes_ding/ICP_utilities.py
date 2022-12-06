@@ -118,9 +118,9 @@ def manual_registration(source,target,threshold):
     print("done")
 
 def calibration_after_rough_reg(source,target,threshold,num_samples):
-    print("Finished -- finetune registration after the rough registration")
-    print("Finished -- Visualization of two rough registed point clouds before finetune")
-    print("press 'q' to continue\n")
+    #print("Finished -- finetune registration after the rough registration")
+    #print("Finished -- Visualization of two rough registed point clouds before finetune")
+    #print("press 'q' to continue\n")
     draw_registration_result(source, target, np.identity(4))
     corr = np.zeros((num_samples, 2)) 
 
