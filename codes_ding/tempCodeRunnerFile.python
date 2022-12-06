@@ -1,0 +1,9 @@
+    figure = Figure(figsize=(6,6))
+    axes = figure.add_subplot(111, projection="3d")
+
+    # Plot the points
+    axes.scatter(points[:,0], points[:,1], points[:,2])
+
+    # Create a canvas and display the figure
+    canvas = FigureCanvasTkAgg(figure, master=window)
+    canvas.draw()

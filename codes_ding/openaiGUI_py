@@ -29,7 +29,6 @@ finetuned_source = None
 finetuned_target = None
 finetuned_registed__both = None
 
-
 # Definiere die Methode, die beim Klicken auf den Button ausgeführt wird
 def pfad_auswahl():
     global model_path
@@ -114,11 +113,11 @@ def segmentation_kreis():
     print("Wählen Sie zuerst Mittelpunkt der Kreises und dann Radius (shift + left mouseclick)")
     example1 = o3d.io.read_point_cloud(os.path.join(model_path,"finetuned_registed__both.ply"))
     picked = uti.pick_points(example1)
-    xyz_load = np.asarray(example1.points)
-    x0 = round(xyz_load[picked[0]][0],2)
-    y0 = round(xyz_load[picked[0]][1],2)
-    x_edge = round(xyz_load[picked[1]][0],2)
-    y_edge = round(xyz_load[picked[1]][1],2)
+    points_load = np.asarray(example1.points)
+    x0 = round(points_load[picked[0]][0],2)
+    y0 = round(points_load[picked[0]][1],2)
+    x_edge = round(points_load[picked[1]][0],2)
+    y_edge = round(points_load[picked[1]][1],2)
     r = math.sqrt((x0-x_edge)**2 + (y0-y_edge)**2)
     r = round(r,2)
 
@@ -162,20 +161,20 @@ def segmentation_ring():
     picked = uti.pick_points(example1)
     print(picked)
 
-    xyz_load = np.asarray(example1.points)
-    #xyz=xyz_load[picked[0],picked[1]]
-    print(xyz_load[picked[0]])
-    print(xyz_load[picked[1]])
-    print(xyz_load[picked[2]])
+    points_load = np.asarray(example1.points)
+    #points=points_load[picked[0],picked[1]]
+    print(points_load[picked[0]])
+    print(points_load[picked[1]])
+    print(points_load[picked[2]])
 
-    x0 = round(xyz_load[picked[0]][0],2)
-    y0 = round(xyz_load[picked[0]][1],2)
+    x0 = round(points_load[picked[0]][0],2)
+    y0 = round(points_load[picked[0]][1],2)
 
-    x_edge = round(xyz_load[picked[1]][0],2)
-    y_edge = round(xyz_load[picked[1]][1],2)
+    x_edge = round(points_load[picked[1]][0],2)
+    y_edge = round(points_load[picked[1]][1],2)
 
-    x_outer = round(xyz_load[picked[2]][0],2)
-    y_outer = round(xyz_load[picked[2]][1],2)
+    x_outer = round(points_load[picked[2]][0],2)
+    y_outer = round(points_load[picked[2]][1],2)
 
     r = math.sqrt((x0-x_edge)**2 + (y0-y_edge)**2)
     r_outer = math.sqrt((x0-x_outer)**2 + (y0-y_outer)**2)
@@ -261,14 +260,17 @@ def segmentation_ring():
         save_path = filedialog.asksaveasfilename(filetypes=[("ply Datei","*.ply")],
                                                  defaultextension = ".ply")
         o3d.io.write_point_cloud(save_path, ring)
+
+def compare(n=None):
+    pc =[]
+    if n is None:
+        n = int(input2.get())
+    for i in range(n):
+        pc_path = filedialog.askopenfilename(filetypes=[("ply Datei","*.ply"),("Alle Datei","*.*")])
+        readed = o3d.io.read_point_cloud(pc_path)
+        pc.append(readed)
+        o3d.visualization.draw_geometries([pc[i]])
         
-def compare(n=0):
-    n=int(input1.get())
-    if num_segmentations == True:
-        pcd=[]
-        for i in n:
-            pcd[n] = o3d.io.read_point_cloud(os.path.join(model_path,"cropped_%d.ply"%(i)))
-            o3d.visualization.draw_geometries([pcd[i]])
 
 # Erstelle die Labeln
 label1 = tk.Label(window, text="Anzahl des Referenzpunkts:",font=("Arial",12))
@@ -281,14 +283,14 @@ input1 = tk.Entry(window)
 input2 = tk.Entry(window)
 
 # Erstelle die Schaltflächen
-button1 = tk.Button(window, text="1.pfad_auswahl", command=pfad_auswahl,font=("Arial",12))
-button2 = tk.Button(window, text="2.stl_auswahl", command=stl_auswahl,font=("Arial",12))
-button3 = tk.Button(window, text="3.ply_auswahl", command=ply_auswahl,font=("Arial",12))
+button1 = tk.Button(window, text="1.Pfad_auswählen", command=pfad_auswahl,font=("Arial",12))
+button2 = tk.Button(window, text="2.stl_auswählen", command=stl_auswahl,font=("Arial",12))
+button3 = tk.Button(window, text="3.ply_auswählen", command=ply_auswahl,font=("Arial",12))
 button4 = tk.Button(window, text="4.ICP_mit_finetuning", command=ICP_mit_finetuning,font=("Arial",12))
 button5 = tk.Button(window, text="ICP_steps", command=ICP_steps,font=("Arial",12))
-button6 = tk.Button(window, text="5.segmentierung_kreis", command=segmentation_kreis,font=("Arial",12))
-button7 = tk.Button(window, text="segmentierung_ring", command=segmentation_ring,font=("Arial",12))
-button8 = tk.Button(window, text="Vergleich der Segmentiertefläche", command=compare,font=("Arial",12))
+button6 = tk.Button(window, text="5.Segmentierung_kreis", command=segmentation_kreis,font=("Arial",12))
+button7 = tk.Button(window, text="Segmentierung_ring", command=segmentation_ring,font=("Arial",12))
+button8 = tk.Button(window, text="6.Vergleich der Segmentiertefläche", command=compare,font=("Arial",12))
 
 
 # Platziere die Schaltflächen und Eingabefelder und labeln im Fenster
@@ -307,5 +309,6 @@ button4.place(relx=0.2, rely=0.28, anchor="c")
 button5.place(relx=0.33, rely=0.28, anchor="c")
 button6.place(relx=0.2, rely=0.33, anchor="c")
 button7.place(relx=0.36, rely=0.33, anchor="c")
+button8.place(relx=0.23, rely=0.40, anchor="c")
 # Betreten die Meldungsschleife
 window.mainloop()
