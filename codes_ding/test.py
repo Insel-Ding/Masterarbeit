@@ -1,16 +1,25 @@
+
+import tkinter as tk
 import open3d as o3d
-import os
-import ICP_utilities as uti
 
-model_path = r'C:\Users\dings\Documents\Masterarbeit\models'
-#pc = os.path.join(model_path,'ogabgabe_0_25_Mesh.ply')
-#pc = os.path.join(model_path,'registed_both.ply')
-pc = os.path.join(model_path,'registed_both_005_025.ply')
-json_path = os.path.join(model_path,'nr1.json')
+from plyfile import PlyData
 
-pointscloud = o3d.io.read_point_cloud(pc)
-o3d.visualization.draw_geometries_with_editing([pointscloud])
+# 读取PLY文件
+ply = o3d.io.read_point_cloud(r'C:\Users\dings\Documents\Masterarbeit\models\cropped_1.ply')
 
-#cropped =uti.crop_from_json(pointscloud, json_path)
-#o3d.visualization.draw_geometries_with_editing([cropped])
+# 创建Tkinter窗口
+root = tk.Tk()
 
+# 创建Tkinter画布
+canvas = tk.Canvas(root, width=500, height=500)
+canvas.pack()
+
+# 遍历PLY模型中的所有面
+for point in ply.points:
+    # 获取面的顶点坐标列表
+    vertices = ply['vertex']
+    # 使用Tkinter的create_polygon方法在画布上绘制多边形
+    canvas.create_polygon(vertices, outline='black', fill='gray', width=1)
+
+# 运行窗口
+root.mainloop()

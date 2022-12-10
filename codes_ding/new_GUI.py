@@ -1,5 +1,6 @@
 import tkinter as tk
 import open3d as o3d
+from plyfile import PlyData
 import numpy as np
 from tkinter import filedialog
 import matplotlib.pyplot as plt
@@ -12,6 +13,10 @@ import copy
 import json
 import sys
 import math
+import pandas as pd
+
+
+
 # Erstelle das Hauptfenster
 window = tk.Tk()
 window.title("GUI")
@@ -28,6 +33,9 @@ registed_target = None
 finetuned_source = None
 finetuned_target = None
 finetuned_registed__both = None
+n = None
+pc = []
+ex = []
 
 # Definiere die Methode, die beim Klicken auf den Button ausgeführt wird
 def pfad_auswahl():
@@ -260,16 +268,48 @@ def segmentation_ring():
         save_path = filedialog.asksaveasfilename(filetypes=[("ply Datei","*.ply")],
                                                  defaultextension = ".ply")
         o3d.io.write_point_cloud(save_path, ring)
-
-def compare(n=None):
-    pc =[]
+# TO DO : laden Kräftewert ein
+def flaeche_auswaehlen(n=None):
+    global pc 
     if n is None:
         n = int(input2.get())
     for i in range(n):
         pc_path = filedialog.askopenfilename(filetypes=[("ply Datei","*.ply"),("Alle Datei","*.*")])
         readed = o3d.io.read_point_cloud(pc_path)
         pc.append(readed)
-        o3d.visualization.draw_geometries([pc[i]])
+
+def kraftdatei_auswaehlen(n=None):
+    global ex 
+    if n is None:
+        n = int(input2.get())
+    for i in range(n):
+        excel_path = filedialog.askopenfilename(filetypes=[("xlsx Datei","*.xlsx"),("Alle Datei","*.*")])
+        readExcel = pd.read_excel(excel_path)
+        print(readExcel)
+        ex.append(readExcel)
+
+def flaeche_und_figure_anzeigen(n=None):
+    global ex 
+    if n is None:
+        n = int(input2.get())
+    for j in range(n):
+        print('Toleranzfläche %d'%(j+1))
+        o3d.visualization.draw_geometries([pc[j]])
+        print('Kraftdaten %d'%(j+1)) 
+        print(ex[j])   
+        y_name = 'SENS%d_FZ'%(j+1)
+        x = list(ex[j]['Time'])      
+        y = list(ex[j][y_name])
+        #plt.figure(figsize=(10,10))
+        f = Figure(figsize=(5,4), dpi=150)
+        a = f.add_subplot(222)
+        a.scatter(x,y,s=100,marker='.',c="blue")
+        plt.title(y_name)
+        canvas  = FigureCanvasTkAgg(f, master=window)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=20,column=4, columnspan=3)
+        #plt.title(y_name)
+        #plt.show()
         
 
 # Erstelle die Labeln
@@ -290,8 +330,9 @@ button4 = tk.Button(window, text="4.ICP_mit_finetuning", command=ICP_mit_finetun
 button5 = tk.Button(window, text="ICP_steps", command=ICP_steps,font=("Arial",12))
 button6 = tk.Button(window, text="5.Segmentierung_kreis", command=segmentation_kreis,font=("Arial",12))
 button7 = tk.Button(window, text="Segmentierung_ring", command=segmentation_ring,font=("Arial",12))
-button8 = tk.Button(window, text="6.Vergleich der Segmentiertefläche", command=compare,font=("Arial",12))
-
+button8 = tk.Button(window, text="6.Segmentiertefläche einladen", command=flaeche_auswaehlen,font=("Arial",12))
+button9 = tk.Button(window, text="7.Kraftwert einladen", command=kraftdatei_auswaehlen,font=("Arial",12))
+button10 = tk.Button(window, text="8.flaeche und figure anzeigen", command=flaeche_und_figure_anzeigen,font=("Arial",12))
 
 # Platziere die Schaltflächen und Eingabefelder und labeln im Fenster
 label1.place(relx=0.1, rely=0.25, anchor="c")
@@ -310,5 +351,7 @@ button5.place(relx=0.33, rely=0.28, anchor="c")
 button6.place(relx=0.2, rely=0.33, anchor="c")
 button7.place(relx=0.36, rely=0.33, anchor="c")
 button8.place(relx=0.23, rely=0.40, anchor="c")
+button9.place(relx=0.23, rely=0.44, anchor="c")
+button10.place(relx=0.23, rely=0.48, anchor="c")
 # Betreten die Meldungsschleife
 window.mainloop()
