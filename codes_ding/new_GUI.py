@@ -21,8 +21,8 @@ import pandas as pd
 window = tk.Tk()
 window.title("GUI")
 
-# Setze die Fenstergröße auf 1200 * 1000
-window.geometry("1200x1000")
+# Setze die Fenstergröße 
+window.geometry("1800x1000")
 #window.configure(background="white")
 # Setze die Dateipfad an 
 model_path = None
@@ -268,7 +268,7 @@ def segmentation_ring():
         save_path = filedialog.asksaveasfilename(filetypes=[("ply Datei","*.ply")],
                                                  defaultextension = ".ply")
         o3d.io.write_point_cloud(save_path, ring)
-# TO DO : laden Kräftewert ein
+
 def flaeche_auswaehlen(n=None):
     global pc 
     if n is None:
@@ -287,11 +287,15 @@ def kraftdatei_auswaehlen(n=None):
         readExcel = pd.read_excel(excel_path)
         print(readExcel)
         ex.append(readExcel)
-
+'''
 def flaeche_und_figure_anzeigen(n=None):
     global ex 
+    a = []
+    x = []
+    y = []
     if n is None:
         n = int(input2.get())
+        f = Figure(figsize=(5,4), dpi=150)
     for j in range(n):
         print('Toleranzfläche %d'%(j+1))
         o3d.visualization.draw_geometries([pc[j]])
@@ -300,18 +304,65 @@ def flaeche_und_figure_anzeigen(n=None):
         y_name = 'SENS%d_FZ'%(j+1)
         x = list(ex[j]['Time'])      
         y = list(ex[j][y_name])
-        #plt.figure(figsize=(10,10))
-        f = Figure(figsize=(5,4), dpi=150)
-        a = f.add_subplot(222)
-        a.scatter(x,y,s=100,marker='.',c="blue")
+        a =f.add_subplot(221)
+        a.scatter(x,y,c="blue")
         plt.title(y_name)
-        canvas  = FigureCanvasTkAgg(f, master=window)
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=20,column=4, columnspan=3)
+        
         #plt.title(y_name)
         #plt.show()
-        
+    canvas  = FigureCanvasTkAgg(f, master=window)
+    canvas.draw()
+    canvas.get_tk_widget().grid(row=20,column=4, columnspan=3)  
+'''
+def flaeche_und_figure_anzeigen(n=None):
+    global ex 
+    x = []
+    y = []
+    if n is None:
+        n = int(input2.get())
+        f = Figure(figsize=(5,4), dpi=150)
+        a = f.add_subplot()
+        w,h=176,n
+        X_arr = [[0 for x in range(w)] for y in range(h)] 
+        Y_arr = [[0 for x in range(w)] for y in range(h)] 
 
+        for j in range(n):
+            o3d.visualization.draw_geometries([pc[j]])
+
+            X_arr[j]=list(ex[j]['Time'])
+            Y_arr[j]=list(ex[j]['SENS%d_FZ'%(j+1)])
+        
+        print(X_arr,Y_arr)
+        if n ==1:
+            a.plot(X_arr[0],Y_arr[0],'x')
+        if n ==2:
+            a.plot(X_arr[0],Y_arr[0],'x')
+            a.plot(X_arr[1],Y_arr[1],'.')
+        if n ==3:
+            a.plot(X_arr[0],Y_arr[0],'x')
+            a.plot(X_arr[1],Y_arr[1],'.')
+            a.plot(X_arr[2],Y_arr[2],'r')
+        if n ==4:
+            a.plot(X_arr[0],Y_arr[0],'x')
+            a.plot(X_arr[1],Y_arr[1],'.')
+            a.plot(X_arr[2],Y_arr[2],'r')
+            a.plot(X_arr[3],Y_arr[3],'*')
+
+        canvas = FigureCanvasTkAgg(f, master=window)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=20,column=4, columnspan=3)
+        '''
+        X_polyfit = np.array(X[0])
+        Y_polyfit =np.array(Y[0])
+        f1 = np.polyfit(X_polyfit,Y_polyfit,2)
+
+        a.plot(Y,X,'x')
+        
+        a.set_xlabel('Produktionsmenge in Stück')
+        a.set_ylabel('Verschleiß in mm') 
+
+        
+'''
 # Erstelle die Labeln
 label1 = tk.Label(window, text="Anzahl des Referenzpunkts:",font=("Arial",12))
 label2 = tk.Label(window, text="/",font=("Arial",12))
@@ -332,7 +383,8 @@ button6 = tk.Button(window, text="5.Segmentierung_kreis", command=segmentation_k
 button7 = tk.Button(window, text="Segmentierung_ring", command=segmentation_ring,font=("Arial",12))
 button8 = tk.Button(window, text="6.Segmentiertefläche einladen", command=flaeche_auswaehlen,font=("Arial",12))
 button9 = tk.Button(window, text="7.Kraftwert einladen", command=kraftdatei_auswaehlen,font=("Arial",12))
-button10 = tk.Button(window, text="8.flaeche und figure anzeigen", command=flaeche_und_figure_anzeigen,font=("Arial",12))
+button10 = tk.Button(window, text="8.Flaeche und Figure anzeigen", command=flaeche_und_figure_anzeigen,font=("Arial",12))
+
 
 # Platziere die Schaltflächen und Eingabefelder und labeln im Fenster
 label1.place(relx=0.1, rely=0.25, anchor="c")
@@ -354,4 +406,5 @@ button8.place(relx=0.23, rely=0.40, anchor="c")
 button9.place(relx=0.23, rely=0.44, anchor="c")
 button10.place(relx=0.23, rely=0.48, anchor="c")
 # Betreten die Meldungsschleife
+
 window.mainloop()
