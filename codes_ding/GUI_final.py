@@ -47,13 +47,19 @@ def pfad_auswahl():
 def stl_auswahl():
     global mesh_path
     mesh_path = filedialog.askopenfilename(filetypes=[("stl Datei","*.stl")])
-    print("stl datei wurde ausgewält")
+    print("stl datei wurde ausgewält, 'q' drücken, um fortzufahren.")
+    mesh = o3d.io.read_triangle_mesh(mesh_path)
+    pc_mesh = o3d.geometry.PointCloud(mesh.vertices)
+    o3d.visualization.draw_geometries([pc_mesh])
+    
     
 
 def ply_auswahl():
     global source_path
     source_path = filedialog.askopenfilename(filetypes=[("ply Datei","*.ply"),("Alle Datei","*.*")])
-    print("ply datei wurde ausgewält")
+    print("ply datei wurde ausgewält, 'q' drücken, um fortzufahren.")
+    pc_source = o3d.io.read_point_cloud(source_path)
+    o3d.visualization.draw_geometries([pc_source])
 
 def ICP_steps():
     mesh = o3d.io.read_triangle_mesh(mesh_path)
@@ -82,6 +88,7 @@ def ICP_mit_finetuning():
     global finetuned_source
     global finetuned_target
     global finetuned_registed__both
+    
     # target
     mesh = o3d.io.read_triangle_mesh(mesh_path)
     target = o3d.geometry.PointCloud(mesh.vertices)
@@ -96,6 +103,7 @@ def ICP_mit_finetuning():
     num_iteration = 50
     threshold = 30
     threshold_calib = 0.01
+
     registed_source,registed_target = uti.icp_algo(source=source, target=target, threshold=threshold, trans_init=trans_init,max_iteration=num_iteration)
     v = tk.messagebox.askyesno(message="Wollen Sie Punktwolke speichern?")
     if v == True:
@@ -108,8 +116,10 @@ def ICP_mit_finetuning():
 
     # finetuning:
     finetuning_process = tk.messagebox.askyesno(message="Führen Sie den Finetuning durch?")
+    answer = tk.simpledialog.askinteger("Input", "Anzahl der Segmentiertefläche:", parent=window)
     if finetuning_process == True:
-        finetuned_source,finetuned_target = uti.calibration_after_rough_reg(source=registed_source,target=registed_target,threshold=threshold_calib,num_samples=int(input1.get()))
+        finetuned_source,finetuned_target = uti.calibration_after_rough_reg(source=registed_source,target=registed_target,threshold=threshold_calib,num_samples=answer)
+        #finetuned_source,finetuned_target = uti.calibration_after_rough_reg(source=registed_source,target=registed_target,threshold=threshold_calib,num_samples=int(input1.get()))
         o3d.io.write_point_cloud(os.path.join(model_path,"finetuned_source.ply"),finetuned_source)
         o3d.io.write_point_cloud(os.path.join(model_path,"finetuned_target.ply"),finetuned_target)
         finetuned_registed__both = finetuned_source+finetuned_target
@@ -119,7 +129,9 @@ def ICP_mit_finetuning():
 def segmentation_kreis():
     
     print("Wählen Sie zuerst Mittelpunkt der Kreises und dann Radius (shift + left mouseclick)")
-    example1 = o3d.io.read_point_cloud(os.path.join(model_path,"finetuned_registed__both.ply"))
+    mesh = o3d.io.read_triangle_mesh(mesh_path)
+    pc_mesh = o3d.geometry.PointCloud(mesh.vertices)
+    example1 = pc_mesh
     picked = uti.pick_points(example1)
     points_load = np.asarray(example1.points)
     x0 = round(points_load[picked[0]][0],2)
@@ -164,11 +176,12 @@ def segmentation_kreis():
 
 def segmentation_ring():
     print("Wählen Sie zuerst Mittelpunkt der Kreises und dann innere/außere-Radius (shift + left mouseclick)")
-    example1 = o3d.io.read_point_cloud(os.path.join(model_path,"finetuned_registed__both.ply"))
+    mesh = o3d.io.read_triangle_mesh(mesh_path)
+    pc_mesh = o3d.geometry.PointCloud(mesh.vertices)
+    example1 = pc_mesh
     
     picked = uti.pick_points(example1)
     print(picked)
-
     points_load = np.asarray(example1.points)
     #points=points_load[picked[0],picked[1]]
     print(points_load[picked[0]])
@@ -268,6 +281,8 @@ def segmentation_ring():
         save_path = filedialog.asksaveasfilename(filetypes=[("ply Datei","*.ply")],
                                                  defaultextension = ".ply")
         o3d.io.write_point_cloud(save_path, ring)
+def tolerenzflächen_anzeigen():
+    print()
 
 def flaeche_auswaehlen(n=None):
     global pc 
@@ -384,33 +399,37 @@ input1 = tk.Entry(window)
 input2 = tk.Entry(window)
 
 # Erstelle die Schaltflächen
-button1 = tk.Button(window, text="1.Pfad_auswählen", command=pfad_auswahl,font=("Arial",12))
+button1 = tk.Button(window, text="1.Model_Pfad_auswählen", command=pfad_auswahl,font=("Arial",12))
 button2 = tk.Button(window, text="2.stl_auswählen", command=stl_auswahl,font=("Arial",12))
-button3 = tk.Button(window, text="3.ply_auswählen", command=ply_auswahl,font=("Arial",12))
-button4 = tk.Button(window, text="4.ICP_mit_finetuning", command=ICP_mit_finetuning,font=("Arial",12))
-button5 = tk.Button(window, text="ICP_steps", command=ICP_steps,font=("Arial",12))
-button6 = tk.Button(window, text="5.Segmentierung_kreis", command=segmentation_kreis,font=("Arial",12))
-button7 = tk.Button(window, text="Segmentierung_ring", command=segmentation_ring,font=("Arial",12))
+button3 = tk.Button(window, text="3.Segmentierung_kreis", command=segmentation_kreis,font=("Arial",12))
+button4 = tk.Button(window, text="4.Segmentierung_ring", command=segmentation_ring,font=("Arial",12))
+button5 = tk.Button(window, text="5.ply_auswählen", command=ply_auswahl,font=("Arial",12))
+button6 = tk.Button(window, text="6.ICP_mit_finetuning", command=ICP_mit_finetuning,font=("Arial",12))
+button7 = tk.Button(window, text="7.ICP_steps", command=ICP_steps,font=("Arial",12))
+button8 = tk.Button(window, text="8.Tolerenzflächen_anzeigen", command=tolerenzflächen_anzeigen ,font=("Arial",12))
+button9 = tk.Button(window, text="9.Kraftwert einladen", command=kraftdatei_auswaehlen,font=("Arial",12))
+button10 = tk.Button(window, text="10.Flaeche und Figure anzeigen", command=flaeche_und_figure_anzeigen,font=("Arial",12))
+'''
 button8 = tk.Button(window, text="6.Segmentiertefläche einladen", command=flaeche_auswaehlen,font=("Arial",12))
 button9 = tk.Button(window, text="7.Kraftwert einladen", command=kraftdatei_auswaehlen,font=("Arial",12))
 button10 = tk.Button(window, text="8.Flaeche und Figure anzeigen", command=flaeche_und_figure_anzeigen,font=("Arial",12))
-
+'''
 
 
 # Platziere die Schaltflächen und Eingabefelder und labeln im Fenster
-label1.grid(row=4,column=1)
-label2.grid(row=5,column=3)
+label1.grid(row=5,column=1)
+label2.grid(row=3,column=3)
 label3.grid(row=6,column=3)
 label4.grid(row=7,column=1)
 
-input1.grid(row=4,column=2)
+input1.grid(row=5,column=2)
 input2.grid(row=7,column=2)
 
 button1.grid(row=1,column=2)
 button2.grid(row=2,column=2)
 button3.grid(row=3,column=2)
-button4.grid(row=5,column=2)
-button5.grid(row=5,column=4)
+button4.grid(row=3,column=4)
+button5.grid(row=4,column=2)
 button6.grid(row=6,column=2)
 button7.grid(row=6,column=4)
 button8.grid(row=8,column=2)
