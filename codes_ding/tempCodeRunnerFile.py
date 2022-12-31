@@ -1,1 +1,1 @@
-print(coord)
+locals
