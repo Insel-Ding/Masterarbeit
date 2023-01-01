@@ -443,18 +443,24 @@ def bestaetigen():
         X_polyfit = np.array(X_poly)
         Y_polyfit =np.array(Y_poly)
         f1 = np.polyfit(X_polyfit,Y_polyfit,2)
-        p1 = np.poly1d(f1)
+        p = np.poly1d(f1)
+        t = np.linspace(0, float(input_tol.get()),250)
         
         diag = Figure(figsize=(5,4), dpi=150)
         a_diag = diag.add_subplot()
-        a_diag.plot(X_poly,Y_poly,'x',label='Sensor 1')
-        a_diag.set_xlabel('Zeit')
-        a_diag.set_ylabel('kraftwert')
+        a_diag.scatter(p(t)[-1],t[-1],color='red')
+        a_diag.plot([p(t)[-1],p(t)[-1]],[0,t[-1]],c='b',linestyle='--')#Senkrecht
+        a_diag.plot([0,p(t)[-1]],[t[-1],t[-1]],c='b',linestyle='--')#Paralle
+        a_diag.text(p(t)[-1],t[-1]-0.02,'Prognose\n(%d)'%(p(t)[-1]))
+        a_diag.plot(Y_poly,X_poly,'o',p(t),t,"-")#,p(t)[-1],t[-1],'x')
+        a_diag.set_xlabel('Productionsmenge')
+        a_diag.set_ylabel('Verschleiß')
+
         canvas = FigureCanvasTkAgg(diag, master=window)
         canvas.draw()
         canvas.get_tk_widget().grid(row=anzahl_prob+4,column=7, columnspan=3)
 
-    button10 = tk.Button(window, text="fit", command=quadratisch,font=("Arial",12))   
+    button10 = tk.Button(window, text="Prognose", command=quadratisch,font=("Arial",12))   
     button10.grid(row=anzahl_prob+3,column=7)   
 
 # Erstelle die Labeln (Haupt Programm)
