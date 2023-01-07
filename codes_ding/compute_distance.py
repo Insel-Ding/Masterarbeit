@@ -15,7 +15,7 @@ target = o3d.geometry.PointCloud(mesh.vertices)
 if __name__ == "__main__":
     #initial
     #low_noise_source = uti.rauchen_eliminieren(source, nb_points=5, radius=3)
-    dists_limit= 1
+    dists_limit= 30
     threshold = 50
     trans_init=[[1,0,0,0],
                 [0,1,0,0],    

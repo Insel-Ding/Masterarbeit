@@ -13,6 +13,7 @@ def compute_dists(source,target,tolerance):
     difference = source.select_by_index(ind)
     
     o3d.visualization.draw_geometries([difference])
+    return dists
 #rauchen eliminieren für gescannte PLY
 
 def rauchen_eliminieren(source,nb_points,radius):

@@ -19,25 +19,47 @@ import pandas as pd
 
 # Erstelle das Hauptfenster
 window = tk.Tk()
-window.title("GUI")
 
+window.title('Prognose der Reststandmenge mittels 3D-Bildverarbeitung')
 # Setze die Fenstergröße 
 window.geometry("1800x1000")
 #window.configure(background="white")
 # Setze die Dateipfad an 
-model_path = None
-mesh_path =None
+model_path = None #source
+mesh_path =None #target
 source_path = None
 registed_source = None
 registed_target = None
 finetuned_source = None
 finetuned_target = None
 finetuned_registed_both = None
-anzahl_seg = 0
+anzahl_seg = 1
 anzahl_prob = 0
 n = None
+produktionsmenge = 0
 pc = []
 ex = []
+toleranz = []
+all_toleranz = 0
+#verschleisswert_max = []
+Meta = []
+
+class PlyMetadata:
+    zahlPly = 0
+
+    def __init__(self,zahlseg,toleseg,toleall,promeng,versc):
+        self.zahlseg = zahlseg
+        self.toleseg = toleseg
+        self.toleall = toleall
+        self.promeng = promeng
+        self.versc = versc
+        PlyMetadata.zahlPly +=1 
+
+    def plyzahl_anzeigen(self):
+     print ("Das ist die %d. Ply Datei" % PlyMetadata.zahlPly)
+ 
+    def plymetadata_anzeigen(self):
+      print (">Anzahl-Seg : %d, \n Toleranz-Seg[] : %s, \n Toleranz-All : %d, \n Produktion-Menge : %d, \n Verschleiß-Wert[] : %s "%(self.zahlseg,self.toleseg,self.toleall,self.promeng,self.versc))
 
 # Definiere die Methode, die beim Klicken auf den Button ausgeführt wird
 def pfad_auswahl():
@@ -53,83 +75,10 @@ def stl_auswahl():
     mesh = o3d.io.read_triangle_mesh(mesh_path)
     pc_mesh = o3d.geometry.PointCloud(mesh.vertices)
     o3d.visualization.draw_geometries([pc_mesh])
-    
-    
-
-def ply_auswahl():
-    global source_path
-    source_path = filedialog.askopenfilename(filetypes=[("ply Datei","*.ply"),("Alle Datei","*.*")])
-    print("ply datei wurde ausgewält, 'q' drücken, um fortzufahren.")
-    pc_source = o3d.io.read_point_cloud(source_path)
-    o3d.visualization.draw_geometries([pc_source])
-
-def ICP_steps():
-    mesh = o3d.io.read_triangle_mesh(mesh_path)
-    target = o3d.geometry.PointCloud(mesh.vertices)
-    
-    source = o3d.io.read_point_cloud(source_path)
-    
-    trans_init=[[1,0,0,0],
-                [0,1,0,0],    
-                [0,0,1,0],            
-                [0,0,0,1],]
-
-    num_iteration = 50
-    threshold = 30
-    threshold_calib = 0.01
-
-
-    #down_sample_source = source.uniform_down_sample(every_k_points=3)
-    registed_source,registed_target = uti.icp_algo_step_by_step(source=source, target=target, threshold=threshold, trans_init=trans_init,num_iteration=num_iteration)
-       
-
-
-def ICP_mit_finetuning():
-    global registed_source
-    global registed_target
-    global finetuned_source
-    global finetuned_target
-    global finetuned_registed_both
-    
-    # target
-    mesh = o3d.io.read_triangle_mesh(mesh_path)
-    target = o3d.geometry.PointCloud(mesh.vertices)
-    # source
-    source = o3d.io.read_point_cloud(source_path)
-
-    trans_init=[[1,0,0,0],
-                [0,1,0,0],    
-                [0,0,1,0],            
-                [0,0,0,1],]
-
-    num_iteration = 50
-    threshold = 30
-    threshold_calib = 0.01
-
-    registed_source,registed_target = uti.icp_algo(source=source, target=target, threshold=threshold, trans_init=trans_init,max_iteration=num_iteration)
-    v = tk.messagebox.askyesno(message="Wollen Sie Punktwolke (ohne Finetuning) speichern?")
-    if v == True:
-        save_path = filedialog.asksaveasfilename(filetypes=[("ply Datei","*.ply")],
-                                                 defaultextension = ".ply")
-        o3d.io.write_point_cloud(os.path.join(model_path,"registed_source_no_finetune.ply"),registed_source)
-        o3d.io.write_point_cloud(os.path.join(model_path,"registed_target_no_finetune.ply"),registed_target)
-        o3d.io.write_point_cloud(os.path.join(model_path,"registed_both_no_finetune.ply"),registed_source+registed_target)
-        
-
-    # finetuning:
-    finetuning_process = tk.messagebox.askyesno(message="Führen Sie den Finetuning durch?")
-    answer = tk.simpledialog.askinteger("Input", "Anzahl der Referenzpunkt:", parent=window)
-    if finetuning_process == True:
-        finetuned_source,finetuned_target = uti.calibration_after_rough_reg(source=registed_source,target=registed_target,threshold=threshold_calib,num_samples=answer)
-        #finetuned_source,finetuned_target = uti.calibration_after_rough_reg(source=registed_source,target=registed_target,threshold=threshold_calib,num_samples=int(input1.get()))
-        o3d.io.write_point_cloud(os.path.join(model_path,"finetuned_source.ply"),finetuned_source)
-        o3d.io.write_point_cloud(os.path.join(model_path,"finetuned_target.ply"),finetuned_target)
-        finetuned_registed_both = finetuned_source+finetuned_target
-        o3d.io.write_point_cloud(os.path.join(model_path,"finetuned_registed_both.ply"),finetuned_registed_both)
-        print("finetuned Datein(finetuned_source.ply; finetuned_target.ply; finetuned_registed_both.ply) wurden in %s gespeichert"%(model_path))
 
 def segmentation_kreis():
     global anzahl_seg
+    global toleranz
     anzahl_seg = tk.simpledialog.askinteger("Input", "Anzahl der Segmentation:", parent=window)
     for k in range(anzahl_seg):
         print("Wählen Sie zuerst Mittelpunkt der Kreises und dann Radius (shift + left mouseclick)")
@@ -178,6 +127,10 @@ def segmentation_kreis():
                                                     #defaultextension = ".ply")
             save_path = os.path.join(model_path,"cropped_%d.ply"%(k+1))                                        
             o3d.io.write_point_cloud(save_path, cropped)  
+        #tolerenz eingeben -> übertragen
+        toleranz.append(tk.simpledialog.askfloat("Input", "Toleranzwert für %d.Segmentationsflaesche"%(k+1), parent=window))
+    all_toleranz = tk.simpledialog.askfloat("Input", "Allgemeine Toleranz:", parent=window)
+    #print('Toleranz für %d Segmentationsflaeschen : %s \n Allgemeine Toleranz : %f'%(anzahl_seg,toleranz,all_toleranz))
 
 def segmentation_ring():
     print("Wählen Sie zuerst Mittelpunkt der Kreises und dann innere/außere-Radius (shift + left mouseclick)")
@@ -287,8 +240,90 @@ def segmentation_ring():
                                                  defaultextension = ".ply")
         o3d.io.write_point_cloud(save_path, ring)
 
-def tolerenzflächen_anzeigen():
+
+def ICP_mit_finetuning():
+    global registed_source
+    global registed_target
+    global finetuned_source
+    global finetuned_target
+    global finetuned_registed_both
+    
+    # target
+    mesh = o3d.io.read_triangle_mesh(mesh_path)
+    target = o3d.geometry.PointCloud(mesh.vertices)
+    # source
+    source = o3d.io.read_point_cloud(source_path)
+
+    trans_init=[[1,0,0,0],
+                [0,1,0,0],    
+                [0,0,1,0],            
+                [0,0,0,1],]
+
+    num_iteration = 50
+    threshold = 30
+    threshold_calib = 0.01
+
+    registed_source,registed_target = uti.icp_algo(source=source, target=target, threshold=threshold, trans_init=trans_init,max_iteration=num_iteration)
+    v = tk.messagebox.askyesno(message="Wollen Sie Punktwolke (ohne Finetuning) speichern?")
+    if v == True:
+        save_path = filedialog.asksaveasfilename(filetypes=[("ply Datei","*.ply")],
+                                                 defaultextension = ".ply")
+        o3d.io.write_point_cloud(os.path.join(model_path,"registed_source_no_finetune.ply"),registed_source)
+        o3d.io.write_point_cloud(os.path.join(model_path,"registed_target_no_finetune.ply"),registed_target)
+        o3d.io.write_point_cloud(os.path.join(model_path,"registed_both_no_finetune.ply"),registed_source+registed_target)
+        
+
+    # finetuning:
+    finetuning_process = tk.messagebox.askyesno(message="Führen Sie den Finetuning durch?")
+    answer = tk.simpledialog.askinteger("Input", "Anzahl der Referenzpunkt:", parent=window)
+    if finetuning_process == True:
+        finetuned_source,finetuned_target = uti.calibration_after_rough_reg(source=registed_source,target=registed_target,threshold=threshold_calib,num_samples=answer)
+        #finetuned_source,finetuned_target = uti.calibration_after_rough_reg(source=registed_source,target=registed_target,threshold=threshold_calib,num_samples=int(input1.get()))
+        o3d.io.write_point_cloud(os.path.join(model_path,"finetuned_source.ply"),finetuned_source)
+        o3d.io.write_point_cloud(os.path.join(model_path,"finetuned_target.ply"),finetuned_target)
+        finetuned_registed_both = finetuned_source+finetuned_target
+        o3d.io.write_point_cloud(os.path.join(model_path,"finetuned_registed_both.ply"),finetuned_registed_both)
+        print("finetuned Datein(finetuned_source.ply; finetuned_target.ply; finetuned_registed_both.ply) wurden in %s gespeichert"%(model_path))
+    
+
+def ICP_steps():
+    mesh = o3d.io.read_triangle_mesh(mesh_path)
+    target = o3d.geometry.PointCloud(mesh.vertices)
+    
+    source = o3d.io.read_point_cloud(source_path)
+    
+    trans_init=[[1,0,0,0],
+                [0,1,0,0],    
+                [0,0,1,0],            
+                [0,0,0,1],]
+
+    num_iteration = 50
+    threshold = 30
+    threshold_calib = 0.01
+
+
+    #down_sample_source = source.uniform_down_sample(every_k_points=3)
+    registed_source,registed_target = uti.icp_algo_step_by_step(source=source, target=target, threshold=threshold, trans_init=trans_init,num_iteration=num_iteration)
+         
+
+def ply_auswahl():
+    global source_path
+    global produktionsmenge
+    source_path = filedialog.askopenfilename(filetypes=[("ply Datei","*.ply"),("Alle Datei","*.*")])
+    print("ply datei wurde ausgewält, 'q' drücken, um fortzufahren.")
+    pc_source = o3d.io.read_point_cloud(source_path)
+    o3d.visualization.draw_geometries([pc_source])
+    produktionsmenge= tk.simpledialog.askinteger("Input", "Produktionsmenge:", parent=window)
+    #print('Produktionsmenge : %d'%(produktionsmenge))
+
+
+
+
+def verschleiss_berechnen():
+    global anzahl_seg
+    verschleisswert_max = []
     for l in range(anzahl_seg):
+        # toleranz fläschen anzeigen
         to_be_cropped = os.path.join(model_path,"finetuned_registed_both.ply")
         pc_cropped = o3d.io.read_point_cloud(to_be_cropped)
         json_path = os.path.join(model_path,"cropped_%d.json"%(l+1))
@@ -296,9 +331,83 @@ def tolerenzflächen_anzeigen():
         cropped = vol.crop_point_cloud(pc_cropped)
         cropped.paint_uniform_color([1, 0.651, 1]) 
         o3d.visualization.draw_geometries([cropped]) 
+        # distanz berechnen
+        cropped1 = os.path.join(model_path,'finetuned_target.ply') # stl
+        pc_cropped1 = o3d.io.read_point_cloud(cropped1)
+        cropped2 = os.path.join(model_path,'finetuned_source.ply') # ply
+        pc_cropped2 = o3d.io.read_point_cloud(cropped2)
+        cropped_dist1 =  vol.crop_point_cloud(pc_cropped1)
+        cropped_dist2 =  vol.crop_point_cloud(pc_cropped2)
+
+        verschleiss = uti.compute_dists(cropped_dist2, cropped_dist1, tolerance=toleranz[l])
+        verschleisswert_max.append(np.amax(verschleiss)) 
+    
+    #print("Verschleiß berechnen für %d Seg_Fläschen : %s"%(anzahl_seg,verschleisswert_max))
+    meta = PlyMetadata(zahlseg=anzahl_seg, toleseg=toleranz, toleall=all_toleranz, promeng=produktionsmenge, versc=verschleisswert_max)
+    meta.plymetadata_anzeigen()
+    meta.plyzahl_anzeigen()
+    Meta.append(meta)
+    #print(Meta)
+
+def graph_zeichnen():
+    X = []
+    Y = []
+    diag = Figure(figsize=(5,4), dpi=150)
+    for k in range(anzahl_seg):
+        print('draw Seg_%s'%(k+1))
+        names = locals()
+        names['Seg_' + str(k+1)] = diag.add_subplot()
+        for m in range(len(Meta)):
+            X.append(Meta[m].promeng)
+            Y.append(Meta[m].versc[k])
+        X_fit = np.array(X)
+        Y_fit = np.array(Y)   
+        f1 = np.polyfit(X_fit, X_fit, 2)
+        p= p = np.poly1d(f1)
+        t = np.linspace(0, Meta[-1].toleseg[k],250)
+        names['Seg_' + str(k+1)].scatter(p(t)[-1],t[-1],color='red')
+        names['Seg_' + str(k+1)].plot([p(t)[-1],p(t)[-1]],[0,t[-1]],c='b',linestyle='--')#Senkrecht
+        names['Seg_' + str(k+1)].plot([0,p(t)[-1]],[t[-1],t[-1]],c='b',linestyle='--')#Paralle
+        names['Seg_' + str(k+1)].text(p(t)[-1],t[-1]-0.02,'Prognose\n(%d)'%(p(t)[-1]))
+        names['Seg_' + str(k+1)].plot(Y_fit,X_fit,'o',p(t),t,"-")#,p(t)[-1],t[-1],'x')
+        names['Seg_' + str(k+1)].set_xlabel('Productionsmenge')
+        names['Seg_' + str(k+1)].set_ylabel('Verschleiß')   
+    canvas = FigureCanvasTkAgg(diag, master=window)
+    canvas.draw()
+    canvas.get_tk_widget().grid(row=7,column=5, columnspan=3)
+  
+    '''
+
+    def quadratisch():
+        X_poly=[] 
+        Y_poly=[] 
+        for n in range(anzahl_prob):
+            X_poly.append(float((names['versc' + str(n+1)]).get()))
+            Y_poly.append(int((names['prob' + str(n+1)]).get()))
+        #Curve Fitting mit numpy.polyfit
+        X_polyfit = np.array(X_poly)
+        Y_polyfit =np.array(Y_poly)
+        f1 = np.polyfit(X_polyfit,Y_polyfit,2)
+        p = np.poly1d(f1)
+        t = np.linspace(0, float(input_tol.get()),250)
         
+        diag = Figure(figsize=(5,4), dpi=150)
+        a_diag = diag.add_subplot()
+        a_diag.scatter(p(t)[-1],t[-1],color='red')
+        a_diag.plot([p(t)[-1],p(t)[-1]],[0,t[-1]],c='b',linestyle='--')#Senkrecht
+        a_diag.plot([0,p(t)[-1]],[t[-1],t[-1]],c='b',linestyle='--')#Paralle
+        a_diag.text(p(t)[-1],t[-1]-0.02,'Prognose\n(%d)'%(p(t)[-1]))
+        a_diag.plot(Y_poly,X_poly,'o',p(t),t,"-")#,p(t)[-1],t[-1],'x')
+        a_diag.set_xlabel('Productionsmenge')
+        a_diag.set_ylabel('Verschleiß')
 
+        canvas = FigureCanvasTkAgg(diag, master=window)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=,column=, columnspan=3)
 
+    '''
+    
+'''
 def flaeche_auswaehlen(n=None):
     global pc 
     if n is None:
@@ -307,7 +416,7 @@ def flaeche_auswaehlen(n=None):
         pc_path = filedialog.askopenfilename(filetypes=[("ply Datei","*.ply"),("Alle Datei","*.*")])
         readed = o3d.io.read_point_cloud(pc_path)
         pc.append(readed)
-
+'''
 def kraftdatei_auswaehlen_diag_anzeigen(n=None):
     global ex 
     if n is None:
@@ -362,7 +471,7 @@ def kraftdatei_auswaehlen_diag_anzeigen(n=None):
     canvas = FigureCanvasTkAgg(f, master=window)
     canvas.draw()
     canvas.get_tk_widget().grid(row=11,column=1, columnspan=3)
-
+'''
 def flaeche_und_figure_anzeigen(n=None):
     global ex 
     x = []
@@ -409,8 +518,8 @@ def flaeche_und_figure_anzeigen(n=None):
         canvas = FigureCanvasTkAgg(f, master=window)
         canvas.draw()
         canvas.get_tk_widget().grid(row=11,column=1, columnspan=3)
-
-def bestaetigen():
+'''
+def nonono():
     global anzahl_prob
     anzahl_prob = int(input1.get())
     print("%d Stichproben bestätigt! "%(anzahl_prob))
@@ -480,9 +589,9 @@ label10 = tk.Label(window, text="|\n",font=("Arial",12))
 label11 = tk.Label(window, text="|\n",font=("Arial",12))
 label12 = tk.Label(window, text="|\n",font=("Arial",12))
 label_Verhersage = tk.Label(window, text="Verhersage-funktion",font=("Arial",18))
-label13 = tk.Label(window, text="Anzahl der Stichproben:",font=("Arial",12))
+
 # Erstelle die Eingabefelder (Verhersage Funktion)
-input1 = tk.Entry(window)
+#input1 = tk.Entry(window)
 
 
 # Erstelle die Schaltflächen
@@ -493,9 +602,9 @@ button4 = tk.Button(window, text="4.Segmentierung_ring(optimal)", command=segmen
 button5 = tk.Button(window, text="5.ply_auswählen", command=ply_auswahl,font=("Arial",12))
 button6 = tk.Button(window, text="6.ICP_mit_finetuning", command=ICP_mit_finetuning,font=("Arial",12))
 button7 = tk.Button(window, text="7.ICP_steps(optimal)", command=ICP_steps,font=("Arial",12))
-button8 = tk.Button(window, text="8.Tolerenzflächen_anzeigen", command=tolerenzflächen_anzeigen ,font=("Arial",12))
+button8 = tk.Button(window, text="8.Verschleiß_berechnen", command=verschleiss_berechnen ,font=("Arial",12))
 button9 = tk.Button(window, text="9.Kraftwert anzeigen", command=kraftdatei_auswaehlen_diag_anzeigen,font=("Arial",12))
-button10 = tk.Button(window, text="Bestätigen", command=bestaetigen,font=("Arial",12))
+button10 = tk.Button(window, text="10.Graph zeichnen", command=graph_zeichnen,font=("Arial",12))
 '''
 button8 = tk.Button(window, text="6.Segmentiertefläche einladen", command=flaeche_auswaehlen,font=("Arial",12))
 button9 = tk.Button(window, text="7.Kraftwert einladen", command=kraftdatei_auswaehlen_diag_anzeigen,font=("Arial",12))
@@ -519,9 +628,9 @@ label10.grid(row=6,column=5)
 label11.grid(row=7,column=5)
 label12.grid(row=8,column=5)
 label_Verhersage.grid(row=0,column=7)
-label13.grid(row=1,column=7)
 
-input1.grid(row=1,column=8)
+
+#input1.grid(row=1,column=8)
 
 
 button1.grid(row=1,column=2)
