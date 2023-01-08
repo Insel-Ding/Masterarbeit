@@ -37,10 +37,11 @@ anzahl_seg = 1
 anzahl_prob = 0
 n = None
 produktionsmenge = 0
+all_toleranz = 0
 pc = []
 ex = []
 toleranz = []
-all_toleranz = 0
+
 #verschleisswert_max = []
 Meta = []
 
@@ -59,7 +60,7 @@ class PlyMetadata:
      print ("Das ist die %d. Ply Datei" % PlyMetadata.zahlPly)
  
     def plymetadata_anzeigen(self):
-      print (">Anzahl-Seg : %d, \n Toleranz-Seg[] : %s, \n Toleranz-All : %d, \n Produktion-Menge : %d, \n Verschleiß-Wert[] : %s "%(self.zahlseg,self.toleseg,self.toleall,self.promeng,self.versc))
+      print (">Anzahl-Seg : %d, \n Toleranz-Seg[] : %s, \n Toleranz-All : %f, \n Produktion-Menge : %d, \n Verschleiß-Wert[] : %s "%(self.zahlseg,self.toleseg,self.toleall,self.promeng,self.versc))
 
 # Definiere die Methode, die beim Klicken auf den Button ausgeführt wird
 def pfad_auswahl():
@@ -129,9 +130,9 @@ def segmentation_kreis():
             save_path = os.path.join(model_path,"cropped_%d.ply"%(k+1))                                        
             o3d.io.write_point_cloud(save_path, cropped)  
         #tolerenz eingeben -> übertragen
-        toleranz.append(tk.simpledialog.askfloat("Input", "Toleranzwert für %d.Segmentationsflaesche"%(k+1), parent=window))
-    all_toleranz = tk.simpledialog.askfloat("Input", "Allgemeine Toleranz:", parent=window)
-    #print('Toleranz für %d Segmentationsflaeschen : %s \n Allgemeine Toleranz : %f'%(anzahl_seg,toleranz,all_toleranz))
+        toleranz.append(tk.simpledialog.askfloat("Input", "Toleranzwert für %d.Segmentationsflaesche:(float)"%(k+1), parent=window))
+    all_toleranz = tk.simpledialog.askfloat("Input", "Allgemeine Toleranz:(float)", parent=window)
+    print(' Allgemeine Toleranz : %f'%(all_toleranz))
 
 def segmentation_ring():
     print("Wählen Sie zuerst Mittelpunkt der Kreises und dann innere/außere-Radius (shift + left mouseclick)")
@@ -322,7 +323,7 @@ def ply_auswahl():
 
 def verschleiss_berechnen():
     global anzahl_seg
-    global all_toleranz
+    #global all_toleranz
     verschleisswert_max = []
     for l in range(anzahl_seg):
         # toleranz fläschen anzeigen
@@ -343,7 +344,7 @@ def verschleiss_berechnen():
 
         verschleiss = uti.compute_dists(cropped_dist2, cropped_dist1, tolerance=toleranz[l])
         verschleisswert_max.append(np.amax(verschleiss)) 
-    
+
     #print("Verschleiß berechnen für %d Seg_Fläschen : %s"%(anzahl_seg,verschleisswert_max))
     meta = PlyMetadata(zahlseg=anzahl_seg, toleseg=toleranz, toleall=all_toleranz, promeng=produktionsmenge, versc=verschleisswert_max)
     meta.plymetadata_anzeigen()
@@ -354,6 +355,7 @@ def verschleiss_berechnen():
 def graph_zeichnen():
     X = []
     Y = []
+
     diag = Figure(figsize=(5,4), dpi=150)
     for k in range(anzahl_seg):
         print('draw Seg_%s'%(k+1))
@@ -364,18 +366,18 @@ def graph_zeichnen():
             Y.append(Meta[m].versc[k])
         X_array = np.array(X)
         Y_array = np.array(Y)   
-        print(X_array)
-        print(Y_array)
+       
         f1 = np.polyfit(X_array, Y_array, 2)
         p = np.poly1d(f1)
-        t = np.linspace(0, toleranz[k],250)
+        t = np.linspace(0, Meta[0].toleseg[k],250)
         names['Seg_' + str(k+1)].scatter(p(t)[-1],t[-1],color='red')
         #names['Seg_' + str(k+1)].plot([0,t[-1]],[p(t)[-1],p(t)[-1]],c='b',linestyle='--')#Senkrecht
         #names['Seg_' + str(k+1)].plot([t[-1],t[-1]],[0,p(t)[-1]],c='b',linestyle='--')#Paralle
         names['Seg_' + str(k+1)].text(p(t)[-1],t[-1]-0.02,'Prognose\n(%d)'%(p(t)[-1]))
-        names['Seg_' + str(k+1)].plot(X_array,Y_array,'o',t,p(t),"-")#,p(t)[-1],t[-1],'x')
+        names['Seg_' + str(k+1)].plot(X_array,Y_array,'o',p(t),t,"-")#,p(t)[-1],t[-1],'x')
         names['Seg_' + str(k+1)].set_xlabel('Productionsmenge')
         names['Seg_' + str(k+1)].set_ylabel('Verschleiß')   
+        names['Seg_' + str(k+1)].set_title('Seg_%d'%(k+1))
         X = []
         Y = []
     canvas = FigureCanvasTkAgg(diag, master=window)
