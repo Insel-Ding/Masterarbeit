@@ -79,6 +79,7 @@ def stl_auswahl():
 def segmentation_kreis():
     global anzahl_seg
     global toleranz
+    global all_toleranz
     anzahl_seg = tk.simpledialog.askinteger("Input", "Anzahl der Segmentation:", parent=window)
     for k in range(anzahl_seg):
         print("Wählen Sie zuerst Mittelpunkt der Kreises und dann Radius (shift + left mouseclick)")
@@ -321,6 +322,7 @@ def ply_auswahl():
 
 def verschleiss_berechnen():
     global anzahl_seg
+    global all_toleranz
     verschleisswert_max = []
     for l in range(anzahl_seg):
         # toleranz fläschen anzeigen
@@ -357,35 +359,29 @@ def graph_zeichnen():
         print('draw Seg_%s'%(k+1))
         names = locals()
         names['Seg_' + str(k+1)] = diag.add_subplot(anzahl_seg,1,k+1)
-        names['Seg_' + str(k+1)] = diag.add_subplot()
         for m in range(len(Meta)):
             X.append(Meta[m].promeng)
             Y.append(Meta[m].versc[k])
-        names['X_'+str(k+1)+'arr'] = np.array(X)
-        names['Y_'+str(k+1)+'arr'] = np.array(Y)   
-        print(names['X_'+str(k+1)+'arr'])
-        print(names['Y_'+str(k+1)+'arr'])
-        para = np.polyfit(names['X_'+str(k+1)+'arr'], names['Y_'+str(k+1)+'arr'], 2)
-        p = np.poly1d(para)
-        prognose_menge = np.polyval(para, Meta[0].toleseg[k])
-        
-        #t = np.linspace(0,prognose_menge,250)
-        names['Seg_' + str(k+1)].scatter(names['X_'+str(k+1)+'arr'],names['Y_'+str(k+1)+'arr'],color='blue')
-        names['Seg_' + str(k+1)].scatter(prognose_menge,Meta[0].toleseg[k],color='r')
-        names['Seg_' + str(k+1)].plot(names['X_'+str(k+1)+'arr'],p(names['X_'+str(k+1)+'arr']),c='b',linestyle='--')
-
+        X_array = np.array(X)
+        Y_array = np.array(Y)   
+        print(X_array)
+        print(Y_array)
+        f1 = np.polyfit(X_array, Y_array, 2)
+        p = np.poly1d(f1)
+        t = np.linspace(0, toleranz[k],250)
+        names['Seg_' + str(k+1)].scatter(p(t)[-1],t[-1],color='red')
+        #names['Seg_' + str(k+1)].plot([0,t[-1]],[p(t)[-1],p(t)[-1]],c='b',linestyle='--')#Senkrecht
         #names['Seg_' + str(k+1)].plot([t[-1],t[-1]],[0,p(t)[-1]],c='b',linestyle='--')#Paralle
-        #names['Seg_' + str(k+1)].text(t[-1]-0.02,p(t)[-1],'Prognose\n(%d)'%(p(t)[-1]))
-        #names['Seg_' + str(k+1)].plot(names['X_'+str(k+1)+'arr'],names['Y_'+str(k+1)+'arr'],'o',t,p(t),"-")#,p(t)[-1],t[-1],'x')
+        names['Seg_' + str(k+1)].text(p(t)[-1],t[-1]-0.02,'Prognose\n(%d)'%(p(t)[-1]))
+        names['Seg_' + str(k+1)].plot(X_array,Y_array,'o',t,p(t),"-")#,p(t)[-1],t[-1],'x')
         names['Seg_' + str(k+1)].set_xlabel('Productionsmenge')
         names['Seg_' + str(k+1)].set_ylabel('Verschleiß')   
         X = []
         Y = []
     canvas = FigureCanvasTkAgg(diag, master=window)
     canvas.draw()
-    canvas.get_tk_widget().grid(row=9+k,column=1, columnspan=3)
-    
-    
+    canvas.get_tk_widget().grid(row=9,column=5, columnspan=3)
+  
     '''
 
     def quadratisch():
@@ -397,8 +393,8 @@ def graph_zeichnen():
         #Curve Fitting mit numpy.polyfit
         X_polyfit = np.array(X_poly)
         Y_polyfit =np.array(Y_poly)
-        para = np.polyfit(X_polyfit,Y_polyfit,2)
-        p = np.poly1d(para)
+        f1 = np.polyfit(X_polyfit,Y_polyfit,2)
+        p = np.poly1d(f1)
         t = np.linspace(0, float(input_tol.get()),250)
         
         diag = Figure(figsize=(5,4), dpi=150)
@@ -561,8 +557,8 @@ def nonono():
         #Curve Fitting mit numpy.polyfit
         X_polyfit = np.array(X_poly)
         Y_polyfit =np.array(Y_poly)
-        para = np.polyfit(X_polyfit,Y_polyfit,2)
-        p = np.poly1d(para)
+        f1 = np.polyfit(X_polyfit,Y_polyfit,2)
+        p = np.poly1d(f1)
         t = np.linspace(0, float(input_tol.get()),250)
         
         diag = Figure(figsize=(5,4), dpi=150)
